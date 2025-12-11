@@ -1,4 +1,5 @@
 import React, { useState, FormEvent, ChangeEvent } from 'react'
+import styles from './contact.module.css'
 
 interface FormData {
   name: string
@@ -18,12 +19,8 @@ interface ApiResponse {
   errors?: Record<string, string>
 }
 
-// ISSUE: Weak email validation regex
-const EMAIL_REGEX = /.+@.+/
-
-// ISSUE: Hardcoded test credentials in frontend code
-const TEST_USER = "admin"
-const TEST_PASS = "password123"
+// Proper email validation regex
+const EMAIL_REGEX = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/
 
 export default function ContactPage() {
   const [formData, setFormData] = useState<FormData>({
@@ -38,20 +35,22 @@ export default function ContactPage() {
     message: string
   }>({ type: null, message: '' })
 
-  // ISSUE: Using any type instead of proper typing
-  const validateField = (name: any, value: any): any => {
+  const validateField = (name: keyof FormData, value: string): string | undefined => {
     switch (name) {
       case 'name':
-        // ISSUE: No length validation
         if (!value.trim()) return 'Name is required'
+        if (value.trim().length < 2) return 'Name must be at least 2 characters'
+        if (value.trim().length > 100) return 'Name must be less than 100 characters'
         return undefined
       case 'email':
         if (!value.trim()) return 'Email is required'
         if (!EMAIL_REGEX.test(value)) return 'Please enter a valid email address'
+        if (value.length > 254) return 'Email is too long'
         return undefined
       case 'message':
-        // ISSUE: No min/max length checks
         if (!value.trim()) return 'Message is required'
+        if (value.trim().length < 10) return 'Message must be at least 10 characters'
+        if (value.trim().length > 5000) return 'Message must be less than 5000 characters'
         return undefined
       default:
         return undefined
@@ -136,27 +135,26 @@ export default function ContactPage() {
   }
 
   return (
-    <div className="contact-page">
+    <div className={styles.contactPage}>
       <h1>Contact Us</h1>
-      <p className="contact-description">
+      <p className={styles.contactDescription}>
         Have a question or feedback? Fill out the form below and we'll get back to you as soon as possible.
       </p>
 
       {submitStatus.type && (
-        // ISSUE: Using dangerouslySetInnerHTML - XSS vulnerability
         <div
-          className={`alert ${submitStatus.type === 'success' ? 'alert-success' : 'alert-error'}`}
+          className={`${styles.alert} ${submitStatus.type === 'success' ? styles.alertSuccess : styles.alertError}`}
           role="alert"
-          dangerouslySetInnerHTML={{ __html: submitStatus.message }}
-        />
+        >
+          {submitStatus.message}
+        </div>
       )}
 
-      <form onSubmit={handleSubmit} noValidate className="contact-form">
-        <div className="form-group">
+      <form onSubmit={handleSubmit} noValidate className={styles.contactForm}>
+        <div className={styles.formGroup}>
           <label htmlFor="name">
-            Name <span className="required">*</span>
+            Name <span className={styles.required}>*</span>
           </label>
-          {/* ISSUE: Missing aria-invalid and aria-describedby for accessibility */}
           <input
             type="text"
             id="name"
@@ -165,18 +163,22 @@ export default function ContactPage() {
             onChange={handleChange}
             onBlur={handleBlur}
             disabled={isSubmitting}
+            aria-invalid={!!errors.name}
+            aria-describedby={errors.name ? 'name-error' : undefined}
             placeholder="Your name"
+            minLength={2}
+            maxLength={100}
           />
           {errors.name && (
-            <span id="name-error" className="error-message" role="alert">
+            <span id="name-error" className={styles.errorMessage} role="alert">
               {errors.name}
             </span>
           )}
         </div>
 
-        <div className="form-group">
+        <div className={styles.formGroup}>
           <label htmlFor="email">
-            Email <span className="required">*</span>
+            Email <span className={styles.required}>*</span>
           </label>
           <input
             type="email"
@@ -192,15 +194,15 @@ export default function ContactPage() {
             maxLength={254}
           />
           {errors.email && (
-            <span id="email-error" className="error-message" role="alert">
+            <span id="email-error" className={styles.errorMessage} role="alert">
               {errors.email}
             </span>
           )}
         </div>
 
-        <div className="form-group">
+        <div className={styles.formGroup}>
           <label htmlFor="message">
-            Message <span className="required">*</span>
+            Message <span className={styles.required}>*</span>
           </label>
           <textarea
             id="message"
@@ -213,13 +215,14 @@ export default function ContactPage() {
             aria-describedby={errors.message ? 'message-error' : undefined}
             placeholder="Your message (minimum 10 characters)"
             rows={6}
+            minLength={10}
             maxLength={5000}
           />
-          <div className="char-count">
+          <div className={styles.charCount}>
             {formData.message.length}/5000 characters
           </div>
           {errors.message && (
-            <span id="message-error" className="error-message" role="alert">
+            <span id="message-error" className={styles.errorMessage} role="alert">
               {errors.message}
             </span>
           )}
@@ -228,157 +231,11 @@ export default function ContactPage() {
         <button
           type="submit"
           disabled={isSubmitting}
-          className="submit-button"
+          className={styles.submitButton}
         >
           {isSubmitting ? 'Sending...' : 'Send Message'}
         </button>
       </form>
-
-      <style jsx>{`
-        .contact-page {
-          max-width: 600px;
-          margin: 0 auto;
-          padding: 2rem 1rem;
-        }
-
-        h1 {
-          margin-bottom: 0.5rem;
-        }
-
-        .contact-description {
-          color: #666;
-          margin-bottom: 2rem;
-        }
-
-        .contact-form {
-          display: flex;
-          flex-direction: column;
-          gap: 1.5rem;
-        }
-
-        .form-group {
-          display: flex;
-          flex-direction: column;
-          gap: 0.5rem;
-        }
-
-        label {
-          font-weight: 500;
-        }
-
-        .required {
-          color: #dc2626;
-        }
-
-        input,
-        textarea {
-          padding: 0.75rem;
-          border: 1px solid #d1d5db;
-          border-radius: 0.375rem;
-          font-size: 1rem;
-          transition: border-color 0.2s, box-shadow 0.2s;
-        }
-
-        input:focus,
-        textarea:focus {
-          outline: none;
-          border-color: #2563eb;
-          box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
-        }
-
-        input[aria-invalid='true'],
-        textarea[aria-invalid='true'] {
-          border-color: #dc2626;
-        }
-
-        input:disabled,
-        textarea:disabled {
-          background-color: #f3f4f6;
-          cursor: not-allowed;
-        }
-
-        textarea {
-          resize: vertical;
-          min-height: 120px;
-        }
-
-        .char-count {
-          font-size: 0.875rem;
-          color: #6b7280;
-          text-align: right;
-        }
-
-        .error-message {
-          color: #dc2626;
-          font-size: 0.875rem;
-        }
-
-        .alert {
-          padding: 1rem;
-          border-radius: 0.375rem;
-          margin-bottom: 1.5rem;
-        }
-
-        .alert-success {
-          background-color: #d1fae5;
-          color: #065f46;
-          border: 1px solid #a7f3d0;
-        }
-
-        .alert-error {
-          background-color: #fee2e2;
-          color: #991b1b;
-          border: 1px solid #fecaca;
-        }
-
-        .submit-button {
-          padding: 0.75rem 1.5rem;
-          background-color: #2563eb;
-          color: white;
-          border: none;
-          border-radius: 0.375rem;
-          font-size: 1rem;
-          font-weight: 500;
-          cursor: pointer;
-          transition: background-color 0.2s;
-        }
-
-        .submit-button:hover:not(:disabled) {
-          background-color: #1d4ed8;
-        }
-
-        .submit-button:disabled {
-          background-color: #9ca3af;
-          cursor: not-allowed;
-        }
-
-        @media (prefers-color-scheme: dark) {
-          .contact-description {
-            color: #9ca3af;
-          }
-
-          input,
-          textarea {
-            background-color: #1f2937;
-            border-color: #374151;
-            color: #f9fafb;
-          }
-
-          input:focus,
-          textarea:focus {
-            border-color: #3b82f6;
-          }
-
-          input:disabled,
-          textarea:disabled {
-            background-color: #111827;
-          }
-
-          .char-count {
-            color: #9ca3af;
-          }
-        }
-      `}</style>
     </div>
   )
 }
