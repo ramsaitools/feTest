@@ -15,13 +15,29 @@ interface ApiResponse {
 // Proper email validation regex
 const EMAIL_REGEX = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/
 
-// Sanitize input to prevent XSS attacks
+/**
+ * Removes `<` and `>` characters and trims surrounding whitespace to sanitize a user-provided string for safer processing.
+ *
+ * @param input - The raw user-provided string to sanitize
+ * @returns The input with `'<`' and `>'` characters removed and leading/trailing whitespace trimmed
+ */
 function sanitizeInput(input: string): string {
   return input
     .replace(/[<>]/g, '')
     .trim()
 }
 
+/**
+ * Validates contact form fields and returns per-field error messages.
+ *
+ * Performs presence checks and enforces these constraints:
+ * - name: required, between 2 and 100 characters
+ * - email: required, must match the email pattern, maximum 254 characters
+ * - message: required, between 10 and 5000 characters
+ *
+ * @param data - The contact form data containing `name`, `email`, and `message`
+ * @returns An object mapping field names to error messages; empty when there are no validation errors
+ */
 function validateContactForm(data: ContactFormData): Record<string, string> {
   const errors: Record<string, string> = {}
 
@@ -55,6 +71,18 @@ function validateContactForm(data: ContactFormData): Record<string, string> {
   return errors
 }
 
+/**
+ * Handle contact form POST requests: sanitize inputs, validate them, and respond with success or error states.
+ *
+ * Accepts only POST; returns 405 for other methods. Sanitizes `name`, `email`, and `message`, validates them with
+ * `validateContactForm`, and returns 400 with field errors when validation fails. On success, logs a sanitized
+ * submission summary and returns a success message. On unexpected errors, logs server-side details and returns a
+ * generic 500 error response.
+ *
+ * @param req - Incoming Next.js API request whose body should contain `{ name, email, message }`
+ * @param res - Next.js API response used to send an `ApiResponse` back to the client
+ * @returns The HTTP response containing an `ApiResponse` object describing success or failure
+ */
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<ApiResponse>

@@ -22,6 +22,11 @@ interface ApiResponse {
 // Proper email validation regex
 const EMAIL_REGEX = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/
 
+/**
+ * Render the contact page with a controlled form that validates inputs, displays inline errors, and submits data to the server.
+ *
+ * @returns The contact page React element containing the form, validation state, submission status, and client-side handlers for change, blur, and submit.
+ */
 export default function ContactPage() {
   const [formData, setFormData] = useState<FormData>({
     name: '',
