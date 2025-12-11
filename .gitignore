@@ -1,2 +1,7 @@
 .next
 node_modules
+
+# Test coverage
+coverage/
+*.coverage
+.nyc_output/
