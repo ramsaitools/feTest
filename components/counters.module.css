@@ -1,6 +1,26 @@
 .counter {
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  padding: 2px 6px;
+  padding: 0.75rem 1.5rem;
+  background-color: #2563eb;
+  color: white;
+  border: none;
+  border-radius: 0.375rem;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.1s;
   margin: 12px 0 0;
+}
+
+.counter:hover {
+  background-color: #1d4ed8;
+}
+
+.counter:active {
+  background-color: #1e40af;
+  transform: scale(0.98);
+}
+
+.counter:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.3);
 }
